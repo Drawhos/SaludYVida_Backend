@@ -1,0 +1,915 @@
+definitions:
+  domain.Appointment:
+    properties:
+      doctor_id:
+        type: string
+      end_date:
+        type: string
+      id:
+        type: string
+      patient_id:
+        type: string
+      procedures:
+        items:
+          $ref: '#/definitions/domain.Procedure'
+        type: array
+      real_start_date:
+        default: "2006-01-02T00:00:00Z"
+        type: string
+      start_date:
+        type: string
+      status:
+        $ref: '#/definitions/domain.AppointmentStatus'
+    type: object
+  domain.AppointmentPatch:
+    properties:
+      procedure:
+        $ref: '#/definitions/domain.Procedure'
+      real_start_date:
+        type: string
+    type: object
+  domain.AppointmentStatus:
+    enum:
+    - 0
+    - 1
+    - 2
+    type: integer
+    x-enum-varnames:
+    - AppointmentStatusPending
+    - AppointmentStatusCancelled
+    - AppointmentStatusDone
+  domain.Auth:
+    properties:
+      dni:
+        type: string
+      password:
+        type: string
+    type: object
+  domain.Procedure:
+    properties:
+      description:
+        type: string
+    type: object
+  domain.RecoverPassword:
+    properties:
+      dni:
+        type: string
+    type: object
+  domain.ResetPassword:
+    properties:
+      access_token:
+        type: string
+      password:
+        type: string
+    type: object
+  domain.UnavailableTime:
+    properties:
+      doctor_id:
+        type: string
+      end_date:
+        type: string
+      id:
+        type: string
+      start_date:
+        type: string
+    type: object
+  domain.UpdatePassword:
+    properties:
+      new_password:
+        type: string
+    type: object
+  domain.UpdateRole:
+    properties:
+      dni:
+        type: string
+      new_role:
+        $ref: '#/definitions/domain.UserRole'
+    type: object
+  domain.UpdateUser:
+    properties:
+      address:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      phone:
+        type: string
+    type: object
+  domain.User:
+    properties:
+      address:
+        type: string
+      dni:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: string
+      is_active:
+        default: true
+        type: boolean
+      last_name:
+        type: string
+      password:
+        type: string
+      phone:
+        type: string
+      role:
+        $ref: '#/definitions/domain.UserRole'
+      type_dni:
+        $ref: '#/definitions/domain.UserTypeDNI'
+    required:
+    - dni
+    - email
+    - first_name
+    type: object
+  domain.UserRole:
+    enum:
+    - 0
+    - 1
+    - 2
+    type: integer
+    x-enum-varnames:
+    - AdminRole
+    - MedicRole
+    - PatientRole
+  domain.UserTypeDNI:
+    enum:
+    - 0
+    - 1
+    - 2
+    type: integer
+    x-enum-comments:
+      TypeDniTP: passport
+    x-enum-varnames:
+    - TypeDniCC
+    - TypeDniTI
+    - TypeDniTP
+info:
+  contact: {}
+  title: Software2Backend
+  version: "1.0"
+paths:
+  /appointments:
+    get:
+      consumes:
+      - application/json
+      description: Get appointments by date range
+      parameters:
+      - description: Start Date with format YYYY-MM-DD
+        in: query
+        name: start_date
+        required: true
+        type: string
+      - description: End Date with format YYYY-MM-DD
+        in: query
+        name: end_date
+        required: true
+        type: string
+      - description: Doctor ID
+        in: query
+        name: doctor_id
+        type: string
+      - description: Patient ID
+        in: query
+        name: patient_id
+        type: string
+      - description: Authorization Token
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.Appointment'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            type: object
+      summary: Get appointments by date range
+      tags:
+      - Appointment
+    post:
+      consumes:
+      - application/json
+      description: Create an appointment
+      parameters:
+      - description: Appointment Information
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/domain.Appointment'
+      - description: Authorization Token
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Appointment'
+        "404":
+          description: Not Found
+          schema:
+            type: object
+      summary: Create an appointment
+      tags:
+      - Appointment
+  /appointments/{id}:
+    patch:
+      consumes:
+      - application/json
+      description: Cancel an appointment by an id
+      parameters:
+      - description: Appointment id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Authorization Token
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+      summary: Cancel an appointment by an id
+      tags:
+      - Appointment
+  /appointments/{id}/add-procedure:
+    patch:
+      consumes:
+      - application/json
+      description: Add appointment procedure
+      parameters:
+      - description: Procedure Information
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/domain.AppointmentPatch'
+      - description: Authorization Token
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+      summary: Add appointment procedure
+      tags:
+      - Appointment
+  /appointments/my-history:
+    get:
+      consumes:
+      - application/json
+      description: Get appointments user history
+      parameters:
+      - description: Authorization Token
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.Appointment'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            type: object
+      summary: Get appointments user history
+      tags:
+      - Appointment
+  /recover-password:
+    post:
+      consumes:
+      - application/json
+      description: Recover user password
+      parameters:
+      - description: Recover Passsword information
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/domain.RecoverPassword'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+      summary: Recover user password
+      tags:
+      - Auth
+  /reports/attendance-report:
+    get:
+      consumes:
+      - application/json
+      description: Generate a report about the amount of patients that not assist
+        to their appointments
+      parameters:
+      - description: Start Date with format YYYY-MM-DD
+        in: query
+        name: start_date
+        required: true
+        type: string
+      - description: End Date with format YYYY-MM-DD
+        in: query
+        name: end_date
+        required: true
+        type: string
+      - description: Authorization Token
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+      summary: Generate a report about the amount of patients that not assist to their
+        appointments
+      tags:
+      - Report
+  /reports/most-consulted-doctors:
+    get:
+      consumes:
+      - application/json
+      description: Generate a report with the doctors that have more realized appointments.
+      parameters:
+      - description: Start Date with format YYYY-MM-DD
+        in: query
+        name: start_date
+        required: true
+        type: string
+      - description: End Date with format YYYY-MM-DD
+        in: query
+        name: end_date
+        required: true
+        type: string
+      - description: Authorization Token
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+      summary: Generate a report with the doctors that have more realized appointments.
+      tags:
+      - Report
+  /reports/users-dni-report:
+    get:
+      consumes:
+      - application/json
+      description: Generate a report about the percentage of users with different
+        type of DNI
+      parameters:
+      - description: Authorization Token
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+      summary: Generate a report about the percentage of users with different type
+        of DNI
+      tags:
+      - Report
+  /reports/waiting-time-report:
+    get:
+      consumes:
+      - application/json
+      description: Generate a report about the waiting time of the patients for their
+        appointments
+      parameters:
+      - description: Start Date with format YYYY-MM-DD
+        in: query
+        name: start_date
+        required: true
+        type: string
+      - description: End Date with format YYYY-MM-DD
+        in: query
+        name: end_date
+        required: true
+        type: string
+      - description: Authorization Token
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+      summary: Generate a report about the waiting time of the patients for their
+        appointments
+      tags:
+      - Report
+  /reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Reset user password with verification token
+      parameters:
+      - description: Reset User Password
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/domain.ResetPassword'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+      summary: Reset user password with verification token
+      tags:
+      - Auth
+  /sign-in:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user by DNI and Password
+      parameters:
+      - description: User credentials
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/domain.Auth'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            type: object
+      summary: Authenticate user by DNI and Password
+      tags:
+      - Auth
+  /unavailable-times:
+    get:
+      consumes:
+      - application/json
+      description: Get unavailable-times by date range
+      parameters:
+      - description: Start Date with format YYYY-MM-DD
+        in: query
+        name: start_date
+        required: true
+        type: string
+      - description: End Date with format YYYY-MM-DD
+        in: query
+        name: end_date
+        required: true
+        type: string
+      - description: Doctor ID
+        in: query
+        name: doctor_id
+        type: string
+      - description: Authorization Token
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.UnavailableTime'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            type: object
+      summary: Get unavailable-times by date range
+      tags:
+      - UnavailableTimes
+    post:
+      consumes:
+      - application/json
+      description: Create unavailable-time
+      parameters:
+      - description: Unavailable Time Information
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/domain.UnavailableTime'
+      - description: Authorization Token
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+      summary: Create unavailable-time
+      tags:
+      - UnavailableTimes
+  /unavailable-times/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete unavailable-time
+      parameters:
+      - description: Unavailable time ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Authorization Token
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+      summary: Delete unavailable-time
+      tags:
+      - UnavailableTimes
+    patch:
+      consumes:
+      - application/json
+      description: Update unavailable-time
+      parameters:
+      - description: Unavailable time ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Unavailable Time Information
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/domain.UnavailableTime'
+      - description: Authorization Token
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+      summary: Update unavailable-time
+      tags:
+      - UnavailableTimes
+  /users:
+    post:
+      consumes:
+      - application/json
+      description: Create an regular or admin user
+      parameters:
+      - description: User Information
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/domain.User'
+      - description: Authorization Token
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.User'
+        "404":
+          description: Not Found
+          schema:
+            type: object
+      summary: Create an regular or admin user
+      tags:
+      - User
+  /users/:
+    get:
+      consumes:
+      - application/json
+      description: Get appointments by role
+      parameters:
+      - description: Role ID
+        enum:
+        - 0
+        - 1
+        - 2
+        in: query
+        name: role
+        required: true
+        type: integer
+      - description: Authorization Token
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.User'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            type: object
+      summary: Get users by role
+      tags:
+      - User
+  /users/{dni}:
+    get:
+      consumes:
+      - application/json
+      description: Get user by DNI
+      parameters:
+      - description: User DNI
+        in: path
+        name: dni
+        required: true
+        type: string
+      - description: Authorization Token
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.User'
+        "404":
+          description: Not Found
+          schema:
+            type: object
+      summary: Get user by DNI
+      tags:
+      - User
+  /users/assign-role:
+    patch:
+      consumes:
+      - application/json
+      description: Assign user role by an admin
+      parameters:
+      - description: Role to update
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/domain.UpdateRole'
+      - description: Authorization Token
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+      summary: Assign user role by an admin
+      tags:
+      - User
+  /users/load-by-csv:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Load user information by CSV
+      parameters:
+      - description: CSV file with user information
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: Authorization Token
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+      summary: Load user information by CSV
+      tags:
+      - User
+  /users/me:
+    get:
+      consumes:
+      - application/json
+      description: Get authenticated user information
+      parameters:
+      - description: Authorization Token
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.User'
+        "404":
+          description: Not Found
+          schema:
+            type: object
+      summary: Get authenticated user information
+      tags:
+      - User
+    patch:
+      consumes:
+      - application/json
+      description: Update authenticated user information
+      parameters:
+      - description: User information to update
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/domain.UpdateUser'
+      - description: Authorization Token
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+      summary: Update authenticated user information
+      tags:
+      - User
+  /users/reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Reset the password of an user by DNI
+      parameters:
+      - description: User password
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/domain.UpdatePassword'
+      - description: Authorization Token
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            type: object
+      summary: Reset the password of an user by DNI
+      tags:
+      - User
+swagger: "2.0"
